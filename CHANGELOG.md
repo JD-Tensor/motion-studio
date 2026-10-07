@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- UI redesign: orange-on-black glass design, step-by-step navigation with completion states and a sliding highlight, animated header activity meter, page and dialog transitions, button spinners, animated progress, count-up numbers (all motion respects `prefers-reduced-motion`)
+- Bundled fonts (Archivo, IBM Plex Mono) are served locally
+
 ## 0.1.0 — first public release
 
 - Web studio: Planner, Lyrics, Voiceover, Storyboard, Scenes, Render, Publish tabs

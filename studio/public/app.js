@@ -14,13 +14,32 @@ async function api(path, body, method) {
   if (!r.ok) throw new Error(j.error || r.statusText);
   return j;
 }
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2200); }
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
 async function copy(text, what = 'Copied') { try { await navigator.clipboard.writeText(text); } catch { const a = document.createElement('textarea'); a.value = text; document.body.append(a); a.select(); document.execCommand('copy'); a.remove(); } toast(what); }
 async function refresh() { S = await api('state'); }
-function busy(btn, on, label) { if (!btn) return; if (on) { btn.dataset.l = btn.textContent; btn.textContent = label || 'Working…'; btn.disabled = true; } else { btn.textContent = btn.dataset.l || btn.textContent; btn.disabled = false; } }
+function busy(btn, on, label) {
+  if (!btn) return;
+  if (on) { btn.dataset.l = btn.textContent; btn.textContent = label || 'Working…'; btn.disabled = true; btn.classList.add('busy'); }
+  else { btn.textContent = btn.dataset.l || btn.textContent; btn.disabled = false; btn.classList.remove('busy'); }
+}
+
+// header activity meter: animates while any long job is being followed
+let running = 0;
+function activity(delta) {
+  running = Math.max(0, running + delta);
+  const el = $('#activity'); if (!el) return;
+  el.classList.toggle('run', running > 0);
+  el.querySelector('.t').textContent = running > 0 ? (running > 1 ? `${running} jobs` : 'working') : 'idle';
+}
 
 /** Poll a job, mirroring its log into `logEl` and progress into `progEl`. */
 async function follow(jobId, { logEl, progEl, onTick } = {}) {
+  let since = 0;
+  activity(1);
+  try { return await followLoop(jobId, { logEl, progEl, onTick }); } finally { activity(-1); }
+}
+async function followLoop(jobId, { logEl, progEl, onTick }) {
   let since = 0;
   for (;;) {
     const j = await api('jobs/' + jobId + '?since=' + since, undefined, 'GET');
@@ -34,12 +53,64 @@ async function follow(jobId, { logEl, progEl, onTick } = {}) {
 }
 
 // ------------------------------------------------------------------ shell
-function renderTabs() {
-  $('#tabs').innerHTML = TABS.map(([k, l], i) => `<button data-t="${k}" class="${k === tab ? 'on' : ''}"><span class="n">${i + 1}</span>${l}</button>`).join('');
-  $('#tabs').onclick = (e) => { const b = e.target.closest('button'); if (b) { tab = b.dataset.t; localStorage.setItem('tab', tab); show(); } };
-  $('#projname').textContent = S.project.title || 'untitled';
+const CHECK = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.4l2.3 2.3 4.7-5"/></svg>';
+function stepDone(k) {
+  const p = S.project, sb = S.storyboard;
+  return ({
+    plan: !!p.topic, lyrics: p.lines.length > 0, voice: S.hasAudio && !!S.lyrics, board: !!sb,
+    scenes: !!sb && sb.plates.length > 0 && sb.plates.every((x) => S.scenes.includes(x.id)), render: S.videos.length > 0, publish: !!p.publish,
+  })[k];
 }
-async function show() { renderTabs(); const f = { plan, lyrics, voice, board, scenes, render, publish }[tab] || plan; await f($('#main')); }
+let pillFirst = true;
+function renderTabs() {
+  const nav = $('#tabs');
+  let pill = nav.querySelector('.pill');
+  if (!pill) { pill = document.createElement('i'); pill.className = 'pill'; nav.append(pill); }
+  nav.querySelectorAll('button').forEach((b) => b.remove());
+  TABS.forEach(([k, l], i) => {
+    const b = document.createElement('button');
+    b.dataset.t = k; b.className = (k === tab ? 'on ' : '') + (stepDone(k) && k !== tab ? 'done' : '');
+    b.innerHTML = `<span class="n">${stepDone(k) && k !== tab ? CHECK : i + 1}</span>${l}`;
+    nav.append(b);
+  });
+  nav.onclick = (e) => { const b = e.target.closest('button'); if (b && b.dataset.t !== tab) { tab = b.dataset.t; localStorage.setItem('tab', tab); show(); } };
+  placePill(true);
+  nav.querySelector('button.on')?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  $('#projname').textContent = S.project.title || 'untitled project';
+}
+/** Move the highlight pill under the active step (animated unless `instant`). Re-run whenever widths can change. */
+function placePill(first = false) {
+  const nav = $('#tabs'), on = nav.querySelector('button.on'), pill = nav.querySelector('.pill');
+  if (!on || !pill) return;
+  const instant = pillFirst || !first;
+  if (instant) pill.style.transition = 'none';
+  pill.style.width = on.offsetWidth + 'px'; pill.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (instant) { void pill.offsetWidth; requestAnimationFrame(() => (pill.style.transition = '')); }
+  pillFirst = false;
+}
+window.addEventListener('resize', () => placePill(false));
+document.fonts?.ready.then(() => placePill(false));
+new ResizeObserver(() => placePill(false)).observe($('#tabs'));
+let enterT;
+async function show() {
+  renderTabs();
+  const m = $('#main'); m.classList.remove('enter'); void m.offsetWidth; m.classList.add('enter');
+  clearTimeout(enterT); enterT = setTimeout(() => m.classList.remove('enter'), 1000);
+  const f = { plan, lyrics, voice, board, scenes, render, publish }[tab] || plan;
+  await f(m);
+  window.scrollTo({ top: 0 });
+}
+
+// range sliders fill, count-up numbers: applied to anything the views add
+function syncRange(r) { const p = ((+r.value - +(r.min || 0)) / ((+r.max || 100) - +(r.min || 0))) * 100; r.style.setProperty('--p', p + '%'); }
+function countUp(el) {
+  const to = +el.dataset.count; if (!Number.isFinite(to) || el.dataset.done) return; el.dataset.done = 1;
+  const t0 = performance.now(), dur = 900;
+  const step = (t) => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e).toLocaleString(); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+new MutationObserver(() => { document.querySelectorAll('input[type=range]').forEach(syncRange); document.querySelectorAll('[data-count]:not([data-done])').forEach(countUp); }).observe(document.body, { childList: true, subtree: true });
+document.addEventListener('input', (e) => { if (e.target.type === 'range') syncRange(e.target); });
 
 // ------------------------------------------------------------------ 1. lyrics
 function lyrics(m) {
@@ -165,7 +236,7 @@ async function elevenCard() {
   const pre = voices.filter((v) => v.category === 'premade'), other = voices.filter((v) => v.category !== 'premade');
   const slider = (id, label, min, max, step, val) => `<div class="col"><label>${label}: <span id="${id}v">${val}</span></label><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"></div>`;
   function paint() {
-    const u = usage ? `<span class="tag ${usage.limit - usage.used < 1500 ? 'bad' : 'ok'}">${(usage.limit - usage.used).toLocaleString()} credits left · ${esc(usage.tier)}</span>` : '';
+    const u = usage ? `<span class="tag ${usage.limit - usage.used < 1500 ? 'bad' : 'ok'}"><span data-count="${usage.limit - usage.used}">${(usage.limit - usage.used).toLocaleString()}</span> credits left · ${esc(usage.tier)}</span>` : '';
     box.innerHTML = `<div class="bar" style="margin:0 0 10px"><b class="grow">Generate with ElevenLabs</b>${u}</div>
       <div class="row"><div class="col"><label>Voice</label><select id="elv">${pre.length ? `<optgroup label="Premade (all plans)">${vopt(pre)}</optgroup>` : ''}${other.length ? `<optgroup label="Library / cloned (may need a paid plan)">${vopt(other)}</optgroup>` : ''}</select></div>
       <div class="col"><label>Model</label><select id="elm">${models.map((m) => `<option value="${esc(m.id)}" ${m.id === s.elevenModel ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></div></div>
@@ -195,7 +266,7 @@ async function elevenCard() {
 
 function timingView(ly) {
   if (!ly) return '<span class="dim">No timings yet. Upload the voiceover and press “Align &amp; analyse”.</span>';
-  return `<b>Word timings</b> <span class="tag">${ly.lines.length} lines</span><div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto">` +
+  return `<b>Word timings</b> <span class="tag"><span data-count="${ly.lines.length}">${ly.lines.length}</span> lines</span><div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto">` +
     ly.lines.map((l, i) => `<div><div class="dim" style="font:11px monospace">#${i} ${l.start.toFixed(2)}–${l.end.toFixed(2)}s</div><div class="words">${l.words.map((w) => `<span>${esc(w.w)} <small>${w.start.toFixed(2)}</small></span>`).join('')}</div></div>`).join('') + '</div>' +
     `<div class="bar"><a href="/data/lyrics.json" target="_blank" style="color:var(--ash)">lyrics.json</a><a href="/data/audio.json" target="_blank" style="color:var(--ash)">audio.json</a></div>`;
 }
@@ -303,7 +374,7 @@ function plan(m) {
     <div class="col"><label>Audience</label><input id="aud" value="${esc(P.audience)}" placeholder="curious teens and adults"><label style="margin-top:8px">Ideas</label><select id="cnt">${[4, 6, 8, 10].map((n) => `<option ${+P.count === n ? 'selected' : ''}>${n}</option>`).join('')}</select></div></div>
     <div class="col" style="margin-top:10px"><label>Notes (optional)</label><input id="pnotes" value="${esc(P.notes)}" placeholder="series idea, topics to lean into or avoid, trends you saw"></div>
     <div class="bar"><button id="suggest">${P.ideas.length ? 'Suggest new ideas' : 'Suggest ideas'}</button><span id="pstat" class="dim">Ideas avoid your earlier projects' topics.</span></div></div>
-  <div id="ideas">${P.ideas.map((i, n) => ideaCard(i, n)).join('')}</div>`;
+  <div id="ideas">${P.ideas.length ? P.ideas.map((i, n) => ideaCard(i, n)).join('') : `<div class="spark"><svg width="150" height="150" viewBox="-75 -75 150 150"><circle class="r" r="48"/><circle class="r" r="48"/><circle class="r" r="48"/><circle class="core" r="7"/></svg><div class="dim">No ideas yet — describe your channel and press <b style="color:var(--bone)">Suggest ideas</b></div></div>`}</div>`;
   const save = () => api('planner/save', { niche: $('#niche').value, audience: $('#aud').value, notes: $('#pnotes').value, count: +$('#cnt').value });
   m.oninput = () => { clearTimeout(plan.t); plan.t = setTimeout(save, 600); };
   $('#suggest').onclick = async (e) => {
@@ -380,7 +451,7 @@ $('#btnSettings').onclick = async () => {
       </div></div>
     <label style="display:flex;gap:8px;align-items:center;margin-top:14px;text-transform:none;letter-spacing:0;font-size:13px"><input type="checkbox" id="rev" style="width:auto" ${s.reviewScenes ? 'checked' : ''}> Visual review: model checks each plate's stills and fixes layout problems (extra cost)</label>
     <div class="bar"><button id="ss">Save</button><button class="ghost" id="sc">Close</button></div>`;
-  d.showModal();
+  d.showModal(); document.activeElement?.blur?.();
   api('claude-models', undefined, 'GET').then((r) => { const cur = s.claudeModel; $('#cm').innerHTML = `<option value="">Default (your Claude Code default)</option>` + r.models.map((m) => `<option value="${esc(m.value)}" ${m.value === cur ? 'selected' : ''}>${esc(m.name)} — ${esc(m.description)}</option>`).join('') + (cur && !r.models.some((m) => m.value === cur) ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ''); }).catch(() => {});
   $('#eon').onchange = (e) => ($('#elset').style.display = e.target.checked ? 'block' : 'none');
   $('#econ').onclick = async (e) => {
@@ -407,7 +478,7 @@ $('#btnProjects').onclick = () => {
     <div class="bar"><button id="np">Start new project</button></div>
     <label style="display:block;margin-top:16px">Archived</label>${S.projects.length ? S.projects.map((n) => `<div class="bar"><span class="grow">${esc(n)}</span><button class="ghost sm" data-load="${esc(n)}">Open (archives current)</button></div>`).join('') : '<span class="dim">none</span>'}
     <div class="bar"><button class="ghost" id="pc">Close</button></div>`;
-  d.showModal(); $('#pc').onclick = () => d.close();
+  d.showModal(); document.activeElement?.blur?.(); $('#pc').onclick = () => d.close();
   $('#np').onclick = async () => { if (!confirm('Archive the current project and start a blank one?')) return; const r = await api('project/new'); await refresh(); d.close(); tab = 'lyrics'; show(); toast(r.archived ? 'Archived as ' + r.archived : 'New project'); };
   d.onclick = async (e) => { const b = e.target.closest('[data-load]'); if (!b) return; const r = await api('project/load', { name: b.dataset.load }); await refresh(); d.close(); show(); toast('Loaded' + (r.archived ? ` (previous → ${r.archived})` : '')); };
 };

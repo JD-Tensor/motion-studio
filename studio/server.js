@@ -479,7 +479,7 @@ function uniqueId(id, used) {
   return n;
 }
 
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf' };
 function serveFile(file, req) {
   if (!existsSync(file) || !statSync(file).isFile()) return new Response('not found', { status: 404 });
   const f = Bun.file(file);
@@ -504,6 +504,7 @@ Bun.serve({
       if (url.pathname.startsWith('/api/')) return await api(req, url);
       if (url.pathname.startsWith('/data/')) return serveFile(inside(DATA, url.pathname.slice(6)) ?? '', req);
       if (url.pathname.startsWith('/out/')) return serveFile(inside(OUT, url.pathname.slice(5)) ?? '', req);
+      if (url.pathname.startsWith('/fonts/')) return serveFile(inside(path.join(APP, 'public/fonts'), decodeURIComponent(url.pathname.slice(7))) ?? '', req);
       if (url.pathname === '/audio/voiceover.mp3') return serveFile(audioFile, req);
       return serveFile(inside(PUBLIC, url.pathname === '/' ? '/index.html' : url.pathname) ?? '', req);
     } catch (e) { return fail(e); }
