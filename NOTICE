@@ -1,0 +1,15 @@
+Motion Studio
+Copyright (c) 2026 JD Tensor — MIT License (see LICENSE).
+
+The JD Tensor copyright and the LICENSE file apply only to the code and documentation
+written for Motion Studio: the studio server and UI (studio/), the scene kit, scripts,
+analysis scripts and docs.
+
+Not original to JD Tensor:
+  * The rendering engine and visual language (app/src/engine/, app/src/scenes/_vo.ts,
+    app/src/scenes/_motifs.ts and parts of app/scripts/render.ts) are derived from
+    pdoom-video by Giacomo Magnanini (https://github.com/mexicat/pdoom-video),
+    Copyright (c) 2026 Giacomo Magnanini, MIT License — see LICENSE.pdoom-engine.
+    All credit for that work belongs to its author.
+  * Fonts, the alignment model and other third-party components keep their own
+    licenses — see THIRD_PARTY_NOTICES.md.

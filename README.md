@@ -146,6 +146,6 @@ Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits and license
 
-Motion Studio's own code is released under the [MIT License](LICENSE). **The rendering engine and visual language are not ours:** they come from [pdoom-video](https://github.com/mexicat/pdoom-video) by Giacomo Magnanini (MIT, see [LICENSE.pdoom-engine](LICENSE.pdoom-engine)), and all credit for that work belongs to him. Fonts, the alignment model and other third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Motion Studio's own code is released under the [MIT License](LICENSE). **The rendering engine and visual language are not ours:** they come from [pdoom-video](https://github.com/mexicat/pdoom-video) by Giacomo Magnanini (MIT, see [LICENSE.pdoom-engine](LICENSE.pdoom-engine)), and all credit for that work belongs to him. See [NOTICE](NOTICE). Fonts, the alignment model and other third-party components are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 "Claude" and "Claude Code" are products of Anthropic; ElevenLabs and OpenAI are their respective owners' trademarks. This project is independent and not affiliated with or endorsed by them.
