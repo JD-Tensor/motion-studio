@@ -1,0 +1,20 @@
+name: Bug report
+description: Something is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: What you did, what you expected, what happened instead }
+    validations: { required: true }
+  - type: input
+    id: env
+    attributes: { label: Environment, placeholder: "OS, GPU, bun --version, ffmpeg -version | head -1, Chrome version" }
+    validations: { required: true }
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engines in use
+      options: ["Claude Code (scene + writing)", "Claude Code scenes, OpenAI writing", "OpenAI for both", "ElevenLabs voiceover enabled"]
+  - type: textarea
+    id: log
+    attributes: { label: Job log, description: "Paste the relevant log from the Studio. Remove API keys.", render: text }

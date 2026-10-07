@@ -1,0 +1,16 @@
+{
+  "name": "motion-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted studio that turns a topic into a voiced 9:16 motion-graphics short, with Claude Code writing the animation code.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "studio": "bun studio/server.js",
+    "preview": "cd app && bunx vite --port 5173",
+    "test": "bun test studio",
+    "typecheck": "cd app && bunx tsc --noEmit -p . && bunx tsc --noEmit -p tsconfig.scripts.json",
+    "check": "bun run typecheck && bun run test"
+  }
+}

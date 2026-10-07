@@ -1,0 +1,34 @@
+:root{--ink:#0a0a0b;--ink2:#151517;--ink3:#1e1e21;--line:#2c2b2a;--bone:#eee9df;--ash:#9c978f;--gr:#5e5b57;--sig:#ff4d12;--ok:#7bd88f}
+*{box-sizing:border-box}body{margin:0;background:var(--ink);color:var(--bone);font:14px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+header{display:flex;align-items:center;gap:24px;padding:10px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--ink);z-index:5}
+.brand{font:700 15px "Archivo",system-ui;letter-spacing:.14em}.brand b{color:var(--sig);margin-left:4px}
+nav{display:flex;gap:2px;flex:1}nav button{background:none;border:0;color:var(--ash);padding:8px 14px;cursor:pointer;font:inherit;border-bottom:2px solid transparent}
+nav button.on{color:var(--bone);border-color:var(--sig)}nav button .n{color:var(--gr);margin-right:6px;font:12px monospace}
+.right{display:flex;gap:8px;align-items:center}.dim{color:var(--gr)}
+main{max-width:1180px;margin:0 auto;padding:24px 20px 80px}
+h2{margin:0 0 4px;font:700 22px "Archivo",system-ui}p.sub{margin:0 0 20px;color:var(--ash)}
+.card{background:var(--ink2);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}.col{display:flex;flex-direction:column;gap:6px}
+label{font-size:12px;color:var(--ash);text-transform:uppercase;letter-spacing:.08em}
+input,textarea,select{width:100%;background:var(--ink);border:1px solid var(--line);color:var(--bone);border-radius:6px;padding:9px 10px;font:inherit}
+textarea{resize:vertical;min-height:90px}textarea.mono,pre{font:12.5px/1.55 "IBM Plex Mono",monospace}
+input:focus,textarea:focus,select:focus{outline:1px solid var(--sig);border-color:var(--sig)}
+button{background:var(--sig);color:#fff;border:0;border-radius:6px;padding:9px 16px;font:600 13px inherit;cursor:pointer}
+button:hover{filter:brightness(1.1)}button:disabled{opacity:.4;cursor:default}button.ghost{background:var(--ink3);color:var(--bone);font-weight:500}button.sm{padding:5px 10px;font-size:12px}
+.bar{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}.grow{flex:1}
+pre{background:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;max-height:340px;margin:0;white-space:pre-wrap;word-break:break-word}
+.log{max-height:260px;color:var(--ash)}
+.tag{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;background:var(--ink3);color:var(--ash)}.tag.ok{color:var(--ok)}.tag.bad{color:var(--sig)}
+.linesbox{display:flex;flex-direction:column;gap:6px}.lrow{display:flex;gap:8px;align-items:center}.lrow .i{width:26px;color:var(--gr);font:12px monospace;text-align:right}.lrow input{flex:1}
+.lrow .t{color:var(--gr);font:11px monospace;width:96px}
+.plate{display:grid;grid-template-columns:1fr 320px;gap:16px}.plate .stills{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;align-content:start}
+.plate img{width:100%;border-radius:4px;border:1px solid var(--line)}@media(max-width:900px){.plate{grid-template-columns:1fr}}
+.tl{display:flex;height:34px;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:10px 0}.tl div{background:var(--ink3);border-right:1px solid var(--ink);font:11px monospace;color:var(--ash);padding:8px 6px;overflow:hidden;white-space:nowrap}
+.words{display:flex;flex-wrap:wrap;gap:4px;font:12px monospace}.words span{background:var(--ink3);padding:1px 6px;border-radius:3px}.words small{color:var(--gr)}
+.prog{height:6px;background:var(--ink3);border-radius:4px;overflow:hidden}.prog i{display:block;height:100%;background:var(--sig);width:0}
+iframe{width:100%;aspect-ratio:16/9;border:1px solid var(--line);border-radius:6px;background:#000}video{width:100%;border-radius:6px;background:#000}
+dialog{background:var(--ink2);color:var(--bone);border:1px solid var(--line);border-radius:10px;padding:20px;width:min(560px,92vw)}dialog::backdrop{background:#000a}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bone);color:var(--ink);padding:8px 16px;border-radius:6px;opacity:0;transition:.2s;pointer-events:none}#toast.on{opacity:1}
+.warn{color:var(--sig)}
+
+.plate img{max-height:300px;object-fit:contain;background:#000}

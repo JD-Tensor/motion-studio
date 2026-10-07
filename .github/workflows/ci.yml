@@ -1,0 +1,24 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install app dependencies
+        run: cd app && bun install --frozen-lockfile || cd app && bun install
+      - name: Typecheck (app + render scripts)
+        run: bun run typecheck
+      - name: Studio tests
+        run: bun test studio
+      - name: Bundle check (server + UI syntax)
+        run: |
+          bun build studio/server.js --target=bun --outdir=/tmp/chk
+          node --check studio/public/app.js
+      - name: Python syntax
+        run: python -m py_compile analysis/align_vo.py analysis/audio_vo.py

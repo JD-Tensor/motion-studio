@@ -1,0 +1,35 @@
+# dependencies / caches
+node_modules/
+.vite/
+.DS_Store
+__pycache__/
+*.tsbuildinfo
+.env
+.env.*
+
+# local config & secrets (API keys live here)
+studio/settings.json
+studio/planner.json
+studio/.venv/
+
+# alignment model (run `bun run setup` / scripts/fetch-model.sh)
+analysis/models/*
+!analysis/models/.gitkeep
+
+# your project's working files (each video lives here until you archive it from the Projects dialog)
+/data/*
+!/data/.gitkeep
+/audio/*
+!/audio/.gitkeep
+app/src/scenes/*.ts
+!app/src/scenes/_*.ts
+/projects/
+/out/
+
+# legacy single-video helper tied to a private project
+analysis/sfx_mix.py
+
+# local tool config / duplicate lockfile
+.claude/
+app/package-lock.json
+*.log
